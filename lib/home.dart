@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:method_channel/battery_level_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -8,33 +10,35 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  static const platform = MethodChannel('com.example/my_channel');
+  int batteryLevel = -1;
+  Future<void> _getBatteryLevel() async {
+    try {
+      final int result = await platform.invokeMethod('getBatteryLevel');
+      batteryLevel = result;
+    } on PlatformException catch (e) {
+      batteryLevel = -1;
+    }
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    _getBatteryLevel();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("Battery Level")),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: .center,
-
-          children: [
-            Stack(
-              children: [
-                Container(
-                  height: 100,
-                  width: 300,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.red),
-                  ),
-                ),
-                Container(
-                  height: 100,
-                  width: 240,
-                  decoration: BoxDecoration(color: Colors.red),
-                ),
-              ],
-            ),
-            Text("75%", style: TextStyle(fontSize: 40, fontWeight: .bold)),
-          ],
+      body: Container(
+        color: Colors.black,
+        child: Center(
+          child: batteryLevel == -1
+              ? CircularProgressIndicator()
+              : BatteryLevelWidget(batteryLevel: batteryLevel),
         ),
       ),
     );
